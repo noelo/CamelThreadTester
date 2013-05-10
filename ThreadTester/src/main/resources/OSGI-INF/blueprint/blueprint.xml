@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<blueprint xmlns="http://www.osgi.org/xmlns/blueprint/v1.0.0"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:camel="http://camel.apache.org/schema/blueprint"
+	xsi:schemaLocation="
+       http://www.osgi.org/xmlns/blueprint/v1.0.0 http://www.osgi.org/xmlns/blueprint/v1.0.0/blueprint.xsd
+       http://camel.apache.org/schema/blueprint http://camel.apache.org/schema/blueprint/camel-blueprint.xsd">
+
+	<bean id="helloBean" class="com.redhat.gps.ThreadTester.HelloBean">
+		<property name="say" value="Hi from Camel" />
+	</bean>
+
+	<bean id="myAAThreadPool" class="org.eclipse.jetty.util.thread.QueuedThreadPool">
+		<property name="minThreads" value="7" />
+		<property name="maxThreads" value="7" />
+		<property name="detailedDump" value="false" />
+		<property name="name" value="NOCTestPoolA" />
+	</bean>
+	<bean id="jettyAA" class="org.apache.camel.component.jetty.JettyHttpComponent">
+		<property name="threadPool" ref="myAAThreadPool" />
+	</bean>
+
+	<bean id="myBBThreadPool" class="org.eclipse.jetty.util.thread.QueuedThreadPool">
+		<property name="minThreads" value="20" />
+		<property name="maxThreads" value="20" />
+		<property name="detailedDump" value="false" />
+		<property name="name" value="NOCTestPoolB" />
+	</bean>
+	<bean id="jettyBB" class="org.apache.camel.component.jetty.JettyHttpComponent">
+		<property name="threadPool" ref="myBBThreadPool" />
+	</bean>
+
+	<camelContext trace="false" id="blueprintContext"
+		xmlns="http://camel.apache.org/schema/blueprint">
+		<route id="HTTPRequestA">
+			<from uri="jettyAA:http://0.0.0.0:9881/myapp/myservice" />
+			<setBody>
+				<method method="hello" ref="helloBean"></method>
+			</setBody>
+			<log message="The message contains ${body}" />
+		</route>
+
+		<route id="HTTPRequestB">
+			<from uri="jettyBB:http://0.0.0.0:9882/myapp/myservice" />
+			<setBody>
+				<method method="hello" ref="helloBean"></method>
+			</setBody>
+			<log message="The message contains ${body}" />
+		</route>
+	</camelContext>
+
+</blueprint>
