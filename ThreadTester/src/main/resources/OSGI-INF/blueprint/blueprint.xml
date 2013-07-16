@@ -9,6 +9,15 @@
 		<property name="say" value="Hi from Camel" />
 	</bean>
 
+	<bean id="amqp" class="org.apache.camel.component.amqp.AMQPComponent">
+		<property name="connectionFactory" ref="amqConnectionFactory" />
+	</bean>
+
+	<bean id="amqConnectionFactory" class="org.apache.qpid.client.AMQConnectionFactory">
+		<property name="connectionURLString"
+			value="amqp://guest:guest@qpid-host/test?brokerlist='tcp://192.168.150.170:5672'" />
+	</bean>
+
 	<bean id="myAAThreadPool" class="org.eclipse.jetty.util.thread.QueuedThreadPool">
 		<property name="minThreads" value="7" />
 		<property name="maxThreads" value="7" />
@@ -29,23 +38,105 @@
 		<property name="threadPool" ref="myBBThreadPool" />
 	</bean>
 
+	<bean id="jettyCC" class="org.apache.camel.component.jetty.JettyHttpComponent" />
+
+	<bean id="myDDThreadPool" class="org.eclipse.jetty.util.thread.QueuedThreadPool">
+		<property name="minThreads" value="5" />
+		<property name="maxThreads" value="5" />
+		<property name="detailedDump" value="true" />
+		<property name="name" value="NOCTestPoolD" />
+	</bean>
+
+	<bean id="jettyDD" class="org.apache.camel.component.jetty.JettyHttpComponent">
+		<property name="threadPool" ref="myDDThreadPool" />
+	</bean>
+
+	<bean id="throttlePolicy" class="org.apache.camel.impl.ThrottlingInflightRoutePolicy">
+		<property name="scope" value="Context" />
+		<property name="maxInflightExchanges" value="5" />
+		<property name="resumePercentOfMax" value="50" />
+		<!-- output throttling activity at WARN level -->
+		<property name="loggingLevel" value="WARN" />
+	</bean>
+
+	<bean id="async" class="com.redhat.gps.component.jetty.async.MyAsyncComponent" />
+
+	<bean id="DDOSFilter" class="com.redhat.gps.servlet.filter.DoSFilter">
+		<property name="DEFAULT_DELAY_MS" value="-1" />
+		<property name="DEFAULT_MAX_REQUEST_MS_INIT_PARAM" value="2" />
+	</bean>
+
+
 	<camelContext trace="false" id="blueprintContext"
 		xmlns="http://camel.apache.org/schema/blueprint">
+		<!--  <threadPoolProfile maxQueueSize="100" keepAliveTime="30"
+			poolSize="3" defaultProfile="true" id="changedProfile" />
 		<route id="HTTPRequestA">
-			<from uri="jettyAA:http://0.0.0.0:9881/myapp/myservice" />
+			<from uri="jettyAA:http://0.0.0.0:9881/myapp/myserviceA" />
 			<setBody>
 				<method method="hello" ref="helloBean"></method>
 			</setBody>
+			<log message="The message contains ${body}" />
+		</route>
+		<route id="HTTPRequestB">
+			<from uri="jettyBB:http://0.0.0.0:9882/myapp/myserviceB" />
+			<setBody>
+				<method method="hello" ref="helloBean"></method>
+			</setBody>
+			<log message="The message contains ${body}" />
+		</route>
+		<route autoStartup="false" id="timerRoute">
+			<from uri="timer:foo?period=500" />
+			<log message="Incoming timer message on ${threadName}" />
+			<to uri="seda:slowConsumer" />
+		</route>
+		<route id="SlowConsumer">
+			<from uri="seda:slowConsumer?concurrentConsumers=10" />
+			<setBody>
+				<method method="hello" ref="helloBean"></method>
+			</setBody>
+			<log message="The message contains ${body} on ${threadName}" />
+		</route>
+		<route id="ThrottleRoutePolicy">
+			<from uri="jettyCC:http://0.0.0.0:9883/myapp/myserviceC" />
+			<setBody>
+				<method method="hello" ref="helloBean"></method>
+			</setBody>
+			<log message="The message contains ${body}" />
+		</route>
+		<route autoStartup="false" routePolicyRef="throttlePolicy" id="ampqINA">
+			<from
+				uri="amqp:queue:TestQueueIN?concurrentConsumers=20&amp;jmsKeyFormatStrategy=passthrough" />
+			<setBody>
+				<method method="hello" ref="helloBean"></method>
+			</setBody>
+			<log message="AMQPAAAAA  The message contains ${body}" />
+		</route>
+		<route id="ampqINB" autoStartup="false">
+			<from
+				uri="amqp:queue:TestQueueIN2?concurrentConsumers=20&amp;jmsKeyFormatStrategy=passthrough" />
+			<setBody>
+				<method method="hello" ref="helloBean"></method>
+			</setBody>
+			<log message="AMQPBBBBBB The message contains ${body}" />
+		</route>-->
+
+
+
+		<route id="HTTPRequestD">
+			<from
+				uri="jetty:http://0.0.0.0:9884/myapp/myserviceD?continuationTimeout=7000&amp;filtersRef=DDOSFilter" />
+			<to uri="async:bye:world?delay=6000" />
 			<log message="The message contains ${body}" />
 		</route>
 
-		<route id="HTTPRequestB">
-			<from uri="jettyBB:http://0.0.0.0:9882/myapp/myservice" />
+		<route id="SlowBeanRoute">
+			<from uri="direct-vm:SlowBean" />
 			<setBody>
-				<method method="hello" ref="helloBean"></method>
+				<method method="helloQuick" ref="helloBean"></method>
 			</setBody>
-			<log message="The message contains ${body}" />
 		</route>
+
 	</camelContext>
 
 </blueprint>

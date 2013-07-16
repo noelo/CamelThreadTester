@@ -8,24 +8,29 @@ import java.util.Date;
  */
 public class HelloBean implements Hello {
 
-    private String say = "Hello World";
+	private String say = "Hello World";
 
-    public String hello() {
-    	try {
-			Thread.sleep(5000);
+	public String hello() {
+		try {
+			Thread.sleep(20000);
 		} catch (InterruptedException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
-        SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
-        return say + " at " + sdf.format(new Date());
-    }
+		SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+		return say + " at " + sdf.format(new Date());
+	}
 
-    public String getSay() {
-        return say;
-    }
+	public String helloQuick() {
+		SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+		return say + " at " + sdf.format(new Date());
+	}
 
-    public void setSay(String say) {
-        this.say = say;
-    }
+	public String getSay() {
+		return say;
+	}
+
+	public void setSay(String say) {
+		this.say = say;
+	}
 }
