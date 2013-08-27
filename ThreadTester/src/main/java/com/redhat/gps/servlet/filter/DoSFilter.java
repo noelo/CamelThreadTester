@@ -187,7 +187,6 @@ public class DoSFilter implements Filter
 
 
 	public void setDEFAULT_DELAY_MS(int DEFAULT_DELAY_MS) {
-		LOG.warn("HERE 1 with"+DEFAULT_DELAY_MS);
 		this.__DEFAULT_DELAY_MS = DEFAULT_DELAY_MS;
 	}
 
@@ -209,7 +208,6 @@ public class DoSFilter implements Filter
 
 	public void setDEFAULT_MAX_REQUEST_MS_INIT_PARAM(
 			long DEFAULT_MAX_REQUEST_MS_INIT_PARAM) {
-		LOG.warn("HERE 2 with"+DEFAULT_MAX_REQUEST_MS_INIT_PARAM);
 		this.__DEFAULT_MAX_REQUEST_MS_INIT_PARAM = DEFAULT_MAX_REQUEST_MS_INIT_PARAM;
 	}
 
